@@ -8,6 +8,7 @@ require './lib/contribution.rb'
 ActiveRecord::Base.establish_connection(YAML::load(File.open('./db/config.yml'))["development"])
 
 def welcome
+  system "clear"
   puts "Welcome to the Employee Tracker"
   menu
 end
@@ -20,6 +21,7 @@ def menu
     puts "Press 'u' to see a list of all employees in a division"
     puts "Press 'ap' to add a new project, and 'lp' to list projects"
     puts "Press 'ep' to see a list of all employees on a project"
+    puts "Press 'apd' to see all projects in a division"
     puts "Press 'e' to exit"
     choice = gets.chomp.upcase
     case choice
@@ -39,6 +41,8 @@ def menu
       list_projects
     when 'EP'
       all_in_projects
+    when 'APD'
+      all_projects_in_division
     when 'E'
       puts "Goodbye"
     else
@@ -48,6 +52,7 @@ def menu
 end
 
 def add
+  system "clear"
   puts "What is your employee name?"
   employee_name = gets.chomp
   puts "What division is this employee in?"
@@ -85,12 +90,12 @@ def add
 
   all_contributions.each do |contribution|
     puts contribution.employee.name
-
-    end
+  end
 
 end
 
 def list
+  system "clear"
   puts "Here are your employees"
   employees = Employee.all
   employees.each { |employee| puts employee.name }
@@ -105,6 +110,7 @@ def add_division
 end
 
 def list_division
+  system "clear"
   puts "Here are the divisions"
   divisions = Division.all
   divisions.each { |division| puts division.name }
@@ -115,6 +121,8 @@ def all_in_division
   puts "Please select the division by name, to see it's employees"
   d_name = gets.chomp
   selected_d = Division.where({:name => d_name}).first
+  system "clear"
+  puts "Here are the employees in #{selected_d.name}:"
   Employee.where({:division_id => selected_d.id}).to_a.each do |employee|
     puts employee.name
   end
@@ -129,6 +137,7 @@ def add_project
 end
 
 def list_projects
+  system "clear"
   puts "Here are your projects"
   Project.all.each { |project| puts project.name}
 end
@@ -137,10 +146,21 @@ def all_in_projects
   list_projects
   puts "Please select the project by name, to see it's employees"
   p_name = gets.chomp
-  selected_p = Projects.where({:name => p_name}).first
-  Employee.where({:project_id => selected_p.id}).to_a.each do |employee|
-    puts employee.name
+  selected_p = Project.where({:name => p_name}).first
+  system "clear"
+  puts "Here are the employees contributing to #{selected_p.name}:"
+  selected_p.employees.each do |emp|
+    puts emp.name
   end
+end
+
+def all_projects_in_division
+  list_division
+  puts "Please select a division to list all projects for:"
+  choice = gets.chomp
+  system "clear"
+  puts "Here are the projects in Division #{choice}"
+  Division.where({:name => choice}).first.employees.each { |employee| puts employee.projects.first.name }
 end
 
 welcome
