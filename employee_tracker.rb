@@ -1,6 +1,9 @@
+require 'pry'
 require 'active_record'
 require './lib/employee'
 require './lib/division'
+require './lib/project'
+require './lib/contribution.rb'
 
 ActiveRecord::Base.establish_connection(YAML::load(File.open('./db/config.yml'))["development"])
 
@@ -15,6 +18,8 @@ def menu
     puts "Press 'a' to add an employee, 'l' to list your employees"
     puts "Press 'ad' to add a new division, and 'ld' to list divisions"
     puts "Press 'u' to see a list of all employees in a division"
+    puts "Press 'ap' to add a new project, and 'lp' to list projects"
+    puts "Press 'ep' to see a list of all employees on a project"
     puts "Press 'e' to exit"
     choice = gets.chomp.upcase
     case choice
@@ -28,6 +33,12 @@ def menu
       list_division
     when 'U'
       all_in_division
+    when 'AP'
+      add_project
+    when 'LP'
+      list_projects
+    when 'EP'
+      all_in_projects
     when 'E'
       puts "Goodbye"
     else
@@ -41,11 +52,42 @@ def add
   employee_name = gets.chomp
   puts "What division is this employee in?"
   d_name = gets.chomp
-  division = Division.new({:name => d_name})
-  division.save
+  if !Division.exists?({:name => d_name})  #If division already exists, don't add
+    division = Division.new({:name => d_name})
+    division.save
+  else
+    division = Division.where({:name => d_name}).first
+  end
+
+  puts "What project is this employee working on?"
+  p_name = gets.chomp
+  if !Project.exists?({:name => p_name})  #If project already exists, don't add
+    new_project = Project.new({:name => p_name})
+    new_project.save
+  else
+    new_project = Project.where({:name => p_name}).first
+  end
+
+  puts "What have you contributed to the project?"
+  c_name = gets.chomp
+
+
   employee = Employee.new({:name => employee_name, :division_id => division.id})
   employee.save
-  puts "'#{employee_name}' has been added to #{employee.division_id}: #{division.name}"
+
+  new_contribution = Contribution.new({:name => c_name, :project_id => new_project.id, :employee_id => employee.id})
+  new_contribution.save
+
+  # employee.update(:projects => [new_project], :contributions => [new_contribution])
+  puts "'#{employee_name}' has been added to #{employee.division_id}: #{division.name} and to #{new_project.name}"
+  puts "These employees have contributed to #{new_project.name}:"
+  all_contributions = Contribution.where({:project_id => new_project.id})
+
+  all_contributions.each do |contribution|
+    puts contribution.employee.name
+
+    end
+
 end
 
 def list
@@ -78,5 +120,27 @@ def all_in_division
   end
 end
 
+def add_project
+  puts "Enter the project name"
+  p_name = gets.chomp
+  new_project = Project.new({:name => p_name})
+  new_project.save
+  puts "#{new_project.name} Added"
+end
+
+def list_projects
+  puts "Here are your projects"
+  Project.all.each { |project| puts project.name}
+end
+
+def all_in_projects
+  list_projects
+  puts "Please select the project by name, to see it's employees"
+  p_name = gets.chomp
+  selected_p = Projects.where({:name => p_name}).first
+  Employee.where({:project_id => selected_p.id}).to_a.each do |employee|
+    puts employee.name
+  end
+end
 
 welcome

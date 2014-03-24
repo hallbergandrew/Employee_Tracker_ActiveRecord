@@ -4,6 +4,7 @@ require 'shoulda-matchers'
 
 require 'employee'
 require 'division'
+require 'project'
 
 ActiveRecord::Base.establish_connection(YAML::load(File.open('./db/config.yml'))["test"])
 
