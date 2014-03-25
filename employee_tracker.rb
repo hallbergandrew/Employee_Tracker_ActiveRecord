@@ -87,7 +87,6 @@ def add
   puts "'#{employee_name}' has been added to #{employee.division_id}: #{division.name} and to #{new_project.name}"
   puts "These employees have contributed to #{new_project.name}:"
   all_contributions = Contribution.where({:project_id => new_project.id})
-
   all_contributions.each do |contribution|
     puts contribution.employee.name
   end
@@ -161,6 +160,7 @@ def all_projects_in_division
   system "clear"
   puts "Here are the projects in Division #{choice}"
   Division.where({:name => choice}).first.employees.each { |employee| puts employee.projects.first.name }
+
 end
 
 welcome
